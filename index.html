@@ -5,22 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>E.R Technology - Pro</title>
     <style>
-        body { background-color: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; min-height: 100vh; overflow-x: hidden; }
+        body { background-color: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; min-height: 100vh; }
         h1 { color: #ffffff; font-family: 'Impact', sans-serif; margin-top: 20px; margin-bottom: 5px; letter-spacing: 2px; }
         .subtitulo { color: #777; font-size: 0.8rem; font-weight: bold; margin-bottom: 15px; }
-        .tasa-caja { color: #4caf50; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; text-align: center; }
-        input { width: 85%; max-width: 320px; padding: 15px; font-size: 28px; border-radius: 12px; border: 2px solid #333; background-color: #1e1e1e; color: #4caf50; text-align: right; margin-bottom: 15px; outline: none; -webkit-appearance: none; }
+        
+        /* Tasa interactiva */
+        .tasa-caja { color: #4caf50; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; text-align: center; cursor: pointer; }
+        
+        input { width: 85%; max-width: 320px; padding: 15px; font-size: 28px; border-radius: 12px; border: 2px solid #333; background-color: #1e1e1e; color: #4caf50; text-align: right; margin-bottom: 15px; outline: none; }
+        
         .teclado { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 85%; max-width: 320px; margin-bottom: 15px; }
-        .btn-num { background-color: #252525; color: white; font-size: 1.2rem; padding: 15px; border-radius: 8px; border: none; cursor: pointer; touch-action: manipulation; }
+        
+        .btn-num { background-color: #252525; color: white; font-size: 1.2rem; padding: 15px; border-radius: 8px; border: none; }
         .btn-op { background-color: #333; color: #ff9800; }
-        .btn-clear { background-color: #ff5252; color: white; font-weight: bold; }
+        .btn-clear { background-color: #ff5252; color: white; }
+        .btn-igual { background-color: #555; color: white; grid-column: span 2; } /* Botón = más grande */
+
         .btn-group { display: flex; gap: 10px; width: 85%; max-width: 320px; margin-bottom: 10px; }
-        button { font-weight: bold; cursor: pointer; border: none; }
-        .btn-usd { background-color: #2e7d32; color: white; flex: 1; padding: 12px; border-radius: 8px; }
-        .btn-bs { background-color: #1565c0; color: white; flex: 1; padding: 12px; border-radius: 8px; }
-        .btn-add { background-color: #ff9800; color: black; width: 85%; max-width: 320px; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .btn-usd { background-color: #2e7d32; color: white; flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; }
+        .btn-bs { background-color: #1565c0; color: white; flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; }
+        .btn-add { background-color: #ff9800; color: black; width: 85%; max-width: 320px; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
+        
         .carrito-container { width: 85%; max-width: 320px; background: #1e1e1e; padding: 20px; border-radius: 12px; text-align: center; }
-        #status-tasa { display: block; font-size: 0.7rem; color: #555; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -28,9 +34,10 @@
     <h1>E.R TECHNOLOGY</h1>
     <div class="subtitulo">SOLUTIONS & FINANCE</div>
     
-    <div class="tasa-caja">
+    <!-- Al tocar la tasa, puedes cambiarla manualmente -->
+    <div class="tasa-caja" onclick="cambiarTasaManual()">
         BCV: <span id="tasa-bcv">48.34</span> Bs/$
-        <small id="status-tasa">Listo para usar</small>
+        <div style="font-size: 0.6rem; color: #555;">(Toca para editar)</div>
     </div>
 
     <input type="text" id="monto" placeholder="0.00" readonly>
@@ -40,17 +47,20 @@
         <button class="btn-num" onclick="presionar('8')">8</button>
         <button class="btn-num" onclick="presionar('9')">9</button>
         <button class="btn-num btn-op" onclick="presionar('/')">/</button>
+        
         <button class="btn-num" onclick="presionar('4')">4</button>
         <button class="btn-num" onclick="presionar('5')">5</button>
         <button class="btn-num" onclick="presionar('6')">6</button>
         <button class="btn-num btn-op" onclick="presionar('*')">*</button>
+        
         <button class="btn-num" onclick="presionar('1')">1</button>
         <button class="btn-num" onclick="presionar('2')">2</button>
         <button class="btn-num" onclick="presionar('3')">3</button>
         <button class="btn-num btn-op" onclick="presionar('-')">-</button>
+        
         <button class="btn-num btn-clear" onclick="reiniciarTodo()">C</button>
         <button class="btn-num" onclick="presionar('0')">0</button>
-        <button class="btn-num" onclick="presionar('.')">.</button>
+        <button class="btn-num btn-igual" onclick="resolverOperacion()">=</button>
         <button class="btn-num btn-op" onclick="presionar('+')">+</button>
     </div>
 
@@ -67,11 +77,10 @@
     </div>
 
     <script>
-        let tasaOficial = 48.34; // Tasa base inmediata
+        let tasaOficial = 48.34;
         let totalUSD = 0;
         const pantalla = document.getElementById('monto');
 
-        // Función de botones numéricos
         function presionar(v) { pantalla.value += v; }
 
         function reiniciarTodo() {
@@ -81,25 +90,50 @@
             document.getElementById('total-bs').innerText = "0.00 Bs";
         }
 
-        function convertir(tipo) {
+        // --- FUNCIÓN DEL BOTÓN IGUAL ---
+        function resolverOperacion() {
             try {
                 if(!pantalla.value) return;
-                let valor = eval(pantalla.value);
+                let resultado = eval(pantalla.value);
+                pantalla.value = Number.isInteger(resultado) ? resultado : resultado.toFixed(2);
+            } catch(e) { pantalla.value = "Error"; }
+        }
+
+        function cambiarTasaManual() {
+            let nuevaTasa = prompt("Ingresa la tasa BCV actual:", tasaOficial);
+            if (nuevaTasa !== null && !isNaN(nuevaTasa) && nuevaTasa > 0) {
+                tasaOficial = parseFloat(nuevaTasa);
+                document.getElementById('tasa-bcv').innerText = tasaOficial.toFixed(2);
+                actualizarTotales();
+            }
+        }
+
+        function convertir(tipo) {
+            try {
+                resolverOperacion(); // Primero resuelve si hay sumas
+                let valor = parseFloat(pantalla.value);
                 pantalla.value = (tipo === 'aUSD' ? valor / tasaOficial : valor * tasaOficial).toFixed(2);
             } catch(e) { pantalla.value = ""; }
         }
 
         function sumarAlCarrito() {
             try {
-                if(!pantalla.value) return;
-                totalUSD += eval(pantalla.value);
-                document.getElementById('total-text').innerText = "Total: " + totalUSD.toFixed(2) + " $";
-                document.getElementById('total-bs').innerText = (totalUSD * tasaOficial).toFixed(2) + " Bs";
-                pantalla.value = "";
+                resolverOperacion();
+                let valor = parseFloat(pantalla.value);
+                if(!isNaN(valor)) {
+                    totalUSD += valor;
+                    actualizarTotales();
+                    pantalla.value = "";
+                }
             } catch(e) { }
         }
 
-        // Intento de actualización en segundo plano (sin bloquear)
+        function actualizarTotales() {
+            document.getElementById('total-text').innerText = "Total: " + totalUSD.toFixed(2) + " $";
+            document.getElementById('total-bs').innerText = (totalUSD * tasaOficial).toFixed(2) + " Bs";
+        }
+
+        // Intento de auto-actualización (opcional)
         async function fetchTasa() {
             try {
                 const res = await fetch('https://dolarapi.com');
@@ -107,14 +141,9 @@
                 if(data && data.promedio) {
                     tasaOficial = parseFloat(data.promedio);
                     document.getElementById('tasa-bcv').innerText = tasaOficial.toFixed(2);
-                    document.getElementById('status-tasa').innerText = "BCV Actualizado ✅";
                 }
-            } catch(e) { 
-                document.getElementById('status-tasa').innerText = "Usando tasa manual";
-            }
+            } catch(e) { console.log("Usando manual"); }
         }
-        
-        // Ejecutamos la búsqueda después de que la app ya cargó
         setTimeout(fetchTasa, 1000);
     </script>
 </body>
